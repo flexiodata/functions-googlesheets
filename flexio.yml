@@ -4,6 +4,9 @@ image:
   src: 'https://static.flex.io/assets/logos/google-sheets.png'
   alt: Google Sheets logo
 
+installation:
+  - path: googlesheets-import.py
+
 prompts:
   - element: auth
     create_pending_connection: true
