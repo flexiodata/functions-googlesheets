@@ -1,0 +1,20 @@
+title: Google Sheets
+description: Functions to access data from Google Sheets
+image:
+  src: 'https://static.flex.io/assets/logos/google-sheets.png'
+  alt: Google Sheets logo
+
+prompts:
+  - element: auth
+    create_pending_connection: true
+    connection:
+      connection_type: googlesheets
+    form_items:
+      - name: googlesheets-connection
+        value: ''
+  - element: file-chooser
+    connection_form_item_name: googlesheets-connection
+    form_items:
+      - name: files
+        value: []
+
