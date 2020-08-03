@@ -26,7 +26,7 @@ def create_functions(flex):
 
         function_info = get_function_info(connection_info, f)
         flex.index.remove(function_info['name'])
-        flex.index.create(function_info['name'], file_id)
+        flex.index.create(function_info['name'], function_info)
 
 def to_date(value):
     return value
@@ -40,7 +40,8 @@ def to_string(value):
 
 def get_function_info(connection_info, table):
 
-    table = f.get('name')
+    table = table.get('name')
+    column_info = []
 
     # return the function info
     info = {}
