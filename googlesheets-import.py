@@ -7,6 +7,7 @@
 # ---
 
 import base64
+import re
 from datetime import *
 from decimal import *
 
@@ -38,14 +39,16 @@ def to_string(value):
         return str(value)
     return value
 
-def get_function_info(connection_info, table):
+def get_function_info(connection_info, sheet):
 
-    table = table.get('name')
+    sheet_id = sheet.get('id')
+    sheet_name = sheet.get('name').lower()
+    clean_name = 'googlesheets-' + re.sub('[^0-9a-zA-Z]+', '-', sheet_name)
     column_info = []
 
     # return the function info
     info = {}
-    info['name'] = 'googlesheets-' + table.lower() # TODO: make clean name
+    info['name'] = clean_name
     info['title'] = ''
     info['description'] = ''
     info['task'] = {
@@ -53,7 +56,7 @@ def get_function_info(connection_info, table):
         'items': [{
             'op': 'execute',
             'lang': 'python',
-            'code': get_function_extract_task(table)
+            'code': get_function_extract_task(sheet)
         }]
     }
     info['returns'] = column_info
@@ -63,11 +66,14 @@ def get_function_info(connection_info, table):
 
     return info
 
-def get_function_extract_task(table):
+def get_function_extract_task(sheet):
     code = """
 
 import json
 import urllib
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 import itertools
 from datetime import *
 from decimal import *
@@ -123,7 +129,42 @@ def flex_handler(flex):
     files = params['files']
     connection_info = params['googlesheets-connection']
 
-    # TODO: get table data from API
+    # query the sheet
+    auth_token = connection_info.get('access_token')
+    headers = {
+        'Authorization': 'Bearer ' + auth_token,
+    }
+
+    spreadsheet_id = '""" + sheet.get('id','') + """'
+    worksheet_title = '""" + sheet.get('name','') + """'
+    url = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheet_id + '/values/' + worksheet_title
+
+    response = requests_retry_session().get(url, headers=headers)
+    response.raise_for_status()
+    content = response.json()
+    values = content.get('values',[['']])
+
+    flex.output.content_type = 'application/json'
+    flex.output.write(values)
+
+def requests_retry_session(
+    retries=3,
+    backoff_factor=0.3,
+    status_forcelist=(429, 500, 502, 503, 504),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
 
 def to_string(value):
     if isinstance(value, (date, datetime)):
