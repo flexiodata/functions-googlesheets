@@ -75,8 +75,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import itertools
-from datetime import *
-from decimal import *
 from cerberus import Validator
 from collections import OrderedDict
 
@@ -144,8 +142,19 @@ def flex_handler(flex):
     content = response.json()
     values = content.get('values',[['']])
 
+    max_row_length = 0
+    for row in values:
+        current_row_length = len(row)
+        if current_row_length > max_row_length:
+            max_row_length = current_row_length
+
+    result = []
+    for row in values:
+        padded_row = row + ['']*(max_row_length-len(row))
+        result.append(padded_row)
+
     flex.output.content_type = 'application/json'
-    flex.output.write(values)
+    flex.output.write(result)
 
 def requests_retry_session(
     retries=3,
@@ -165,13 +174,6 @@ def requests_retry_session(
     session.mount('http://', adapter)
     session.mount('https://', adapter)
     return session
-
-def to_string(value):
-    if isinstance(value, (date, datetime)):
-        return value.isoformat()
-    if isinstance(value, (Decimal)):
-        return str(value)
-    return value
 
 def validator_list(field, value, error):
     if isinstance(value, str):
