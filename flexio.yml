@@ -4,7 +4,7 @@ image:
   src: 'https://static.flex.io/assets/logos/google-sheets.png'
   alt: Google Sheets logo
 
-import:
+installation:
   - path: googlesheets-import.py
 
 prompts:
