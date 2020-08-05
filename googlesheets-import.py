@@ -133,7 +133,7 @@ def flex_handler(flex):
         'Authorization': 'Bearer ' + auth_token,
     }
 
-    spreadsheet_id = '""" + sheet.get('id','') + """'
+    spreadsheet_id = '""" + sheet.get('path','//').split('/')[1] + """'
     worksheet_title = '""" + sheet.get('name','') + """'
     url = 'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheet_id + '/values/' + worksheet_title
 
